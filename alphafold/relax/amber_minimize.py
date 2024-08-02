@@ -92,7 +92,7 @@ def _openmm_minimize(
     _add_restraints(system, pdb, stiffness, restraint_set, exclude_residues)
 
   integrator = openmm.LangevinIntegrator(0, 0.01, 0.0)
-  platform = openmm.Platform.getPlatformByName("xpu" if use_gpu else "CPU")
+  platform = openmm.Platform.getPlatformByName("CUDA" if use_gpu else "CPU")
   simulation = openmm_app.Simulation(
       pdb.topology, system, integrator, platform)
   simulation.context.setPositions(pdb.positions)
@@ -488,7 +488,7 @@ def run_pipeline(
     else:
       pdb_string = ret["min_pdb"]
     # Calculation of violations can cause CUDA errors for some JAX versions.
-    with jax.default_device(jax.local_devices(backend="xpu")[0]):
+    with jax.default_device(jax.local_devices(backend="cuda")[0]):
       ret.update(get_violation_metrics(prot))
     ret.update({
         "num_exclusions": len(exclude_residues),
